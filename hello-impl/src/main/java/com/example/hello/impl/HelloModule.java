@@ -13,8 +13,7 @@ import com.example.hello.api.HelloService;
 public class HelloModule extends AbstractModule implements ServiceGuiceSupport {
   @Override
   protected void configure() {
-
     bindServices(serviceBinding(HelloService.class, HelloServiceImpl.class));
-
   }
+
 }

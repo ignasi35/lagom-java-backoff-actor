@@ -40,10 +40,15 @@ public class HelloServiceImpl implements HelloService {
 
     private final ActorRef singletonProxy;
 
+    // The injected Cassandra Session is the one provided in Lagom's Cassandra Read-Side. To configure this Cassandra
+    // Session use the docs on Cassandra read side (https://www.lagomframework.com/documentation/1.3.x/java/ReadSideCassandra.html)
     @Inject
     public HelloServiceImpl(ActorSystem system, CassandraSession cassandraSession) {
+
+        // Props of the DAO actor
         Props yourRealActorProps = PrepareDBActor.props(cassandraSession);
 
+        // Props of a Backoff Supervisor on the Props of the DAO actor
         Props backoffProps = BackoffSupervisor.props(
                 Backoff.onFailure(
                         yourRealActorProps,
@@ -54,13 +59,14 @@ public class HelloServiceImpl implements HelloService {
                 )
         );
 
-        // Start the cluster singleton
+        // Start the cluster singleton (BackoffSupervisor over DAO Actor)
         ClusterSingletonManagerSettings settings = ClusterSingletonManagerSettings.create(system);
         ActorRef singleton = system.actorOf(
                 ClusterSingletonManager.props(backoffProps, PoisonPill.getInstance(), settings),
                 "my-singleton"
         );
 
+        // Because the singleton may be on another node, we need a Cluster Singleton Proxy to access the Singleton.
         ClusterSingletonProxySettings proxySettings = ClusterSingletonProxySettings.create(system);
         singletonProxy = system.actorOf(
                 ClusterSingletonProxy.props(
@@ -71,10 +77,14 @@ public class HelloServiceImpl implements HelloService {
         );
     }
 
+    // Once built, the ServiceImpl still has not guarantees that the table exists in the database. In order to use the
+    // database all methods in the ServiceImpl will access via the DAO singleton Actor. The DAO singleton Actor will
+    // make sure that the messages are only processed into actual database requests if the process of creating the
+    // table completed.
     @Override
     public ServiceCall<NotUsed, String> hello(String id) {
         return request -> {
-            // Ask the singleton actor the Hello command.
+            // Ask the DAO actor (via the proxy and into the singleton) the Hello command.
             return ask(singletonProxy, new Hello(id, Optional.empty()), DEFAULT_TIMEOUT)
                     .thenApply(result -> (String) result);
         };
@@ -83,7 +93,7 @@ public class HelloServiceImpl implements HelloService {
     @Override
     public ServiceCall<GreetingMessage, Done> useGreeting(String id) {
         return request -> {
-            // Tell the singleton actor to use the greeting message specified.
+            // Tell the DAO actor (via the proxy and into the singleton) to use the greeting message specified.
             return ask(singletonProxy, new UseGreetingMessage(id, request.message), DEFAULT_TIMEOUT)
                     .thenApply(result -> Done.getInstance());
         };
