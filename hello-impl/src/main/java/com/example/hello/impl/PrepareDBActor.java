@@ -2,7 +2,7 @@ package com.example.hello.impl;
 
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.persistence.cassandra.session.javadsl.CassandraSession;
+import com.lightbend.lagom.javadsl.persistence.cassandra.CassandraSession;
 
 
 public class PrepareDBActor extends UntypedActor {

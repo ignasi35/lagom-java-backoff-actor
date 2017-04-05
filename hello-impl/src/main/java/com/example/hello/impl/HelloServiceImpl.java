@@ -13,7 +13,6 @@ import akka.cluster.singleton.ClusterSingletonManagerSettings;
 import akka.pattern.Backoff;
 import akka.pattern.BackoffSupervisor;
 import akka.pattern.Patterns;
-import akka.persistence.cassandra.session.javadsl.CassandraSession;
 import akka.util.Timeout;
 import com.example.hello.api.GreetingMessage;
 import com.example.hello.api.HelloService;
@@ -22,6 +21,7 @@ import com.example.hello.impl.HelloCommand.UseGreetingMessage;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRef;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
+import com.lightbend.lagom.javadsl.persistence.cassandra.CassandraSession;
 import scala.concurrent.duration.Duration;
 
 import javax.inject.Inject;
