@@ -20,7 +20,7 @@ import akka.Done;
 
 /**
  * This interface defines all the commands that the HelloEntity supports.
- * 
+ *
  * By convention, the commands should be inner classes of the interface, which
  * makes it simple to get a complete picture of what commands an entity
  * supports.
@@ -37,34 +37,35 @@ public interface HelloCommand extends Jsonable {
   @Immutable
   @JsonDeserialize
   public final class UseGreetingMessage implements HelloCommand, CompressedJsonable, PersistentEntity.ReplyType<Done> {
+    public final String id;
     public final String message;
 
     @JsonCreator
-    public UseGreetingMessage(String message) {
+    public UseGreetingMessage(String id, String message) {
+      this.id = Preconditions.checkNotNull(id, "id");
       this.message = Preconditions.checkNotNull(message, "message");
     }
 
     @Override
-    public boolean equals(@Nullable Object another) {
-      if (this == another)
-        return true;
-      return another instanceof UseGreetingMessage && equalTo((UseGreetingMessage) another);
-    }
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
 
-    private boolean equalTo(UseGreetingMessage another) {
-      return message.equals(another.message);
+      UseGreetingMessage that = (UseGreetingMessage) o;
+
+      return id.equals(that.id) && message.equals(that.message);
     }
 
     @Override
     public int hashCode() {
-      int h = 31;
-      h = h * 17 + message.hashCode();
-      return h;
+      int result = id.hashCode();
+      result = 31 * result + message.hashCode();
+      return result;
     }
 
     @Override
     public String toString() {
-      return MoreObjects.toStringHelper("UseGreetingMessage").add("message", message).toString();
+      return MoreObjects.toStringHelper("UseGreetingMessage").add("id", id).add("message", message).toString();
     }
   }
 
